@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Appeal Deadline Tracker — Asdale Dynamics, LLC</title>
+<style>
+:root {
+  --bg: #f7f6f3;
+  --card: #ffffff;
+  --ink: #2b2b2b;
+  --muted: #6b6b6b;
+  --line: #e4e1da;
+  --accent: #3a6b5e;
+  --accent-soft: #e7f0ed;
+  --warn-bg: #fdf1e0;
+  --warn-ink: #9a5b13;
+  --over-bg: #fbe9e7;
+  --over-ink: #a33425;
+  --ok-bg: #e7f0ed;
+  --ok-ink: #2f5a4e;
+  --radius: 10px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 1rem 1.25rem 3rem; }
+header h1 { font-size: 1.5rem; margin: 0.4rem 0 0.2rem; }
+header p.tagline { margin: 0 0 0.75rem; color: var(--muted); font-size: 0.95rem; }
+.disclaimer {
+  background: var(--accent-soft);
+  border: 1px solid #cfe0da;
+  border-radius: var(--radius);
+  padding: 0.6rem 0.9rem;
+  font-size: 0.87rem;
+  color: #38524a;
+  margin-bottom: 1rem;
+}
+.toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 1rem; }
+button {
+  font: inherit;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+}
+button.secondary { background: #e9e7e1; color: var(--ink); }
+button.small { font-size: 0.8rem; padding: 0.25rem 0.6rem; }
+button.danger { background: #b3402e; }
+button:hover { filter: brightness(1.05); }
+input, select, textarea {
+  font: inherit;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  max-width: 100%;
+}
+textarea { width: 100%; resize: vertical; }
+label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 0.2rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.7rem; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.9rem;
+}
+.claim-card { cursor: pointer; transition: box-shadow 0.15s; }
+.claim-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.claim-card h3 { margin: 0 0 0.25rem; font-size: 1.02rem; }
+.claim-card .meta { color: var(--muted); font-size: 0.86rem; }
+.badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.12rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.badge.on-track { background: var(--ok-bg); color: var(--ok-ink); }
+.badge.due-soon { background: var(--warn-bg); color: var(--warn-ink); }
+.badge.overdue { background: var(--over-bg); color: var(--over-ink); }
+.badge.neutral { background: #eeedea; color: var(--muted); }
+.badge.level { background: var(--accent-soft); color: var(--ok-ink); }
+dialog {
+  border: none;
+  border-radius: var(--radius);
+  padding: 0;
+  width: min(680px, 94vw);
+  max-height: 92vh;
+}
+dialog::backdrop { background: rgba(40,40,40,0.45); }
+.dlg-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; background: var(--card);
+}
+.dlg-head h2 { font-size: 1.05rem; margin: 0; }
+.dlg-body { padding: 1rem; overflow-y: auto; max-height: calc(92vh - 56px); }
+.section-title {
+  font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--muted); margin: 1.2rem 0 0.5rem;
+}
+.row-item {
+  display: flex; gap: 0.5rem; align-items: center;
+  padding: 0.35rem 0; border-bottom: 1px dashed var(--line);
+}
+.row-item:last-child { border-bottom: none; }
+.row-item .grow { flex: 1; min-width: 0; }
+.doc-item.done .doc-text { text-decoration: line-through; color: var(--muted); }
+.call-item .ref { font-family: Consolas, monospace; background: #f1f0ec; padding: 0.05rem 0.35rem; border-radius: 4px; }
+table.levels { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+table.levels th, table.levels td { text-align: left; padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--line); }
+table.levels input { width: 100%; }
+.kanban-note { color: var(--muted); font-size: 0.78rem; margin-top: 0.3rem; }
+.empty {
+  text-align: center; color: var(--muted);
+  padding: 2rem; border: 1px dashed var(--line);
+  border-radius: var(--radius); background: #fbfaf8;
+}
+footer { margin-top: 2rem; color: var(--muted); font-size: 0.8rem; }
+footer a { color: var(--accent); }
+.unsaved-flash { color: var(--warn-ink); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Appeal Deadline Tracker</h1>
+    <p class="tagline">Track insurance claim denials as paperwork: deadlines, documents, calls, and appeal levels. Everything stays in this browser.</p>
+    <div class="disclaimer">
+      <strong>Education and organization only.</strong> This tool helps you organize insurance paperwork and deadlines. It is not medical advice, not legal advice, and does not decide what care you should receive. Deadlines shown are estimates based on the window you enter — always confirm deadlines with your plan documents, denial letter, or your state's insurance regulator.
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <button id="btn-new">+ New claim</button>
+    <button id="btn-export" class="secondary">Export backup</button>
+    <button id="btn-import" class="secondary">Import backup</button>
+    <input type="file" id="import-file" accept="application/json,.json" hidden>
+    <input type="search" id="search" placeholder="Search claims…" aria-label="Search claims" style="flex:1;min-width:180px">
+  </div>
+
+  <div id="claims-list"></div>
+
+  <footer>
+    Stores all data only in this browser's localStorage — nothing is sent anywhere.
+    Export a backup regularly. Not affiliated with any insurer.<br>
+    &copy; 2026 Asdale Dynamics, LLC · MIT License ·
+    <a href="https://dylanasdale.github.io" rel="noreferrer noopener">dylanasdale.github.io</a>
+  </footer>
+</div>
+
+<dialog id="claim-dialog">
+  <form method="dialog" style="display:contents">
+    <div class="dlg-head">
+      <h2 id="dlg-title">Claim</h2>
+      <div style="display:flex;gap:0.4rem">
+        <button type="button" id="btn-delete" class="danger small">Delete</button>
+        <button type="button" id="btn-close" class="small secondary">Close</button>
+      </div>
+    </div>
+    <div class="dlg-body">
+      <h3 class="section-title">Claim details</h3>
+      <div class="grid">
+        <div>
+          <label for="f-label">Case name</label>
+          <input id="f-label" placeholder="e.g. MRI denial" maxlength="80">
+        </div>
+        <div>
+          <label for="f-claimnum">Claim number</label>
+          <input id="f-claimnum" placeholder="as shown on your EOB" maxlength="60">
+        </div>
+        <div>
+          <label for="f-insurer">Insurer / plan</label>
+          <input id="f-insurer" placeholder="e.g. InsuranceCo PPO" maxlength="80">
+        </div>
+        <div>
+          <label for="f-denialdate">Denial date (on the letter)</label>
+          <input id="f-denialdate" type="date">
+        </div>
+        <div>
+          <label for="f-reason">Denial reason</label>
+          <select id="f-reason"></select>
+        </div>
+        <div>
+          <label for="f-window">Appeal window (days)</label>
+          <input id="f-window" type="number" min="1" max="730" value="180">
+        </div>
+      </div>
+      <div style="margin-top:0.6rem">
+        <label for="f-reasonnotes">Denial reason notes (what the letter says)</label>
+        <textarea id="f-reasonnotes" rows="2" maxlength="600" placeholder="Quote or paraphrase the stated reason from the denial letter"></textarea>
+      </div>
+
+      <h3 class="section-title">Appeal levels &amp; next-letter due dates</h3>
+      <div id="levels-wrap"></div>
+      <div class="kanban-note" id="levels-note"></div>
+      <button type="button" id="btn-add-level" class="small secondary" style="margin-top:0.5rem">+ Add appeal level</button>
+
+      <h3 class="section-title">Appeal window summary</h3>
+      <div id="summary-box" class="card" style="margin-bottom:0"></div>
+
+      <h3 class="section-title">Documents to gather</h3>
+      <div id="docs-wrap"></div>
+      <div style="display:flex;gap:0.4rem;margin-top:0.5rem">
+        <input id="f-newdoc" placeholder="e.g. denial letter PDF, itemized bill" maxlength="120" style="flex:1">
+        <button type="button" id="btn-add-doc" class="small">Add document</button>
+      </div>
+
+      <h3 class="section-title">Call log (reference numbers)</h3>
+      <div id="calls-wrap"></div>
+      <button type="button" id="btn-add-call" class="small secondary" style="margin-top:0.5rem">+ Log a call</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+"use strict";
+/* == PURE-START ==
+   Pure date/deadline functions. Tests (tests/run-tests.js) load exactly this
+   block. No DOM, no storage access here. */
+function startOfDay(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+function parseLocalDate(str) {
+  if (typeof str !== "string") return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str.trim());
+  if (!m) return null;
+  const y = +m[1], mo = +m[2], da = +m[3];
+  const d = new Date(y, mo - 1, da);
+  if (d.getFullYear() !== y || d.getMonth() !== mo - 1 || d.getDate() !== da) return null;
+  return d;
+}
+function addDays(d, n) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+}
+function daysBetween(from, to) {
+  const MS = 86400000;
+  const a = startOfDay(from);
+  const b = startOfDay(to);
+  return Math.round((b - a) / MS);
+}
+function todayStr() {
+  return toISO(startOfDay(new Date()));
+}
+function toISO(d) {
+  const p = (n) => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+}
+function daysLeft(dueStr, todayString) {
+  const due = parseLocalDate(dueStr);
+  const today = parseLocalDate(todayString);
+  if (!due || !today) return null;
+  return daysBetween(today, due);
+}
+function statusForDaysLeft(days) {
+  if (days === null || days === undefined) return "unknown";
+  if (days < 0) return "overdue";
+  if (days <= 7) return "due-soon";
+  return "on-track";
+}
+function levelDueDate(denialDateStr, windowDays, level, resolutions) {
+  const denial = parseLocalDate(denialDateStr);
+  const win = Number(windowDays);
+  const lvl = Number(level);
+  if (!denial || !Number.isFinite(win) || win < 1 || !Number.isInteger(lvl) || lvl < 1) return null;
+  const res = resolutions || {};
+  let anchor = denial;
+  let estimated = true;
+  for (let i = 2; i <= lvl; i++) {
+    const outcome = parseLocalDate(res[i - 1]);
+    if (outcome) { anchor = outcome; estimated = false; }
+    else { anchor = addDays(anchor, win); estimated = true; }
+  }
+  return { due: toISO(addDays(anchor, win)), estimated: estimated };
+}
+/* == PURE-END == */
+
+const DENIAL_REASONS = [
+  "Lack of prior authorization",
+  "Out-of-network",
+  "Not medically necessary (insurer's words)",
+  "Experimental / investigational",
+  "Coding / billing error",
+  "Excluded service",
+  "COB / other payer responsible",
+  "Missing documentation",
+  "Timely filing",
+  "Other (see notes)"
+];
+const DEFAULT_LEVELS = [
+  "Level 1 — internal appeal",
+  "Level 2 — internal appeal",
+  "Level 3 — external review"
+];
+
+const STORAGE_KEY = "appeal-deadline-tracker.claims.v1";
+
+function loadClaims() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    return [];
+  }
+}
+function saveClaims(claims) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(claims));
+}
+function uid() {
+  return "c-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+}
+function normalizeClaim(c) {
+  return {
+    id: typeof c.id === "string" ? c.id : uid(),
+    label: String(c.label || "").slice(0, 80),
+    claimNumber: String(c.claimNumber || "").slice(0, 60),
+    insurer: String(c.insurer || "").slice(0, 80),
+    denialDate: parseLocalDate(c.denialDate) ? toISO(parseLocalDate(c.denialDate)) : "",
+    denialReason: String(c.denialReason || ""),
+    denialReasonNotes: String(c.denialReasonNotes || "").slice(0, 600),
+    windowDays: (() => {
+      const n = Number(c.windowDays);
+      return Number.isFinite(n) && n >= 1 && n <= 730 ? Math.round(n) : 180;
+    })(),
+    levels: Array.isArray(c.levels) && c.levels.length
+      ? c.levels.slice(0, 8).map((l, i) => ({
+          name: String((l && l.name) || DEFAULT_LEVELS[i] || ("Level " + (i + 1))).slice(0, 80),
+          outcomeDate: (() => {
+            const iso = l && parseLocalDate(l.outcomeDate) ? toISO(parseLocalDate(l.outcomeDate)) : "";
+            return iso;
+          })()
+        }))
+      : DEFAULT_LEVELS.map((name) => ({ name, outcomeDate: "" })),
+    documents: Array.isArray(c.documents)
+      ? c.documents.slice(0, 60).map((d) => ({
+          text: String((d && d.text) || "").slice(0, 120),
+          done: !!d.done
+        })).filter((d) => d.text)
+      : [],
+    calls: Array.isArray(c.calls)
+      ? c.calls.slice(0, 100).map((k) => ({
+          date: (() => {
+            const iso = k && parseLocalDate(k.date) ? toISO(parseLocalDate(k.date)) : "";
+            return iso;
+          })(),
+          who: String((k && k.who) || "").slice(0, 80),
+          ref: String((k && k.ref) || "").slice(0, 60),
+          notes: String((k && k.notes) || "").slice(0, 400)
+        }))
+      : []
+  };
+}
+
+let claims = loadClaims().map(normalizeClaim);
+let openClaimId = null;
+let searchQuery = "";
+
+const $ = (sel) => document.querySelector(sel);
+
+function renderList() {
+  const listEl = $("#claims-list");
+  const q = searchQuery.trim().toLowerCase();
+  const visible = claims.filter((c) => {
+    if (!q) return true;
+    const hay = [c.label, c.claimNumber, c.insurer, c.denialReason, c.denialReasonNotes].join(" ").toLowerCase();
+    return hay.includes(q);
+  });
+  if (visible.length === 0) {
+    listEl.innerHTML = claims.length
+      ? '<div class="empty">No claims match your search.</div>'
+      : '<div class="empty"><strong>No claims yet.</strong><br>Click &#8220;+ New claim&#8221; to add your first denial. Tip: open your denial letter first &#8212; it lists the claim number, denial date, stated reason, and usually the appeal window.</div>';
+    return;
+  }
+  const sorted = visible.slice().sort((a, b) => {
+    const da = nextDue(a) || { days: Infinity };
+    const dbb = nextDue(b) || { days: Infinity };
+    return da.days - dbb.days;
+  });
+  listEl.innerHTML = sorted.map((c) => {
+    const nd = nextDue(c);
+    let badge;
+    if (!nd) {
+      badge = c.denialDate
+        ? '<span class="badge neutral">All appeal levels decided</span>'
+        : '<span class="badge neutral">Add denial date</span>';
+    } else if (nd.days < 0) {
+      badge = '<span class="badge overdue">' + escapeHtml(nd.levelName) + " — overdue " + (-nd.days) + "d</span>";
+    } else {
+      const s = statusForDaysLeft(nd.days);
+      const words = nd.days === 0 ? "due TODAY" : "in " + nd.days + "d";
+      badge = '<span class="badge ' + s + '">' + escapeHtml(nd.levelName) + " — " + words + (nd.estimated ? " (est.)" : "") + "</span>";
+    }
+    const doneDocs = c.documents.filter((d) => d.done).length;
+    return (
+      '<div class="card claim-card" data-id="' + c.id + '" role="button" tabindex="0" aria-label="Open claim ' + escapeHtml(c.label || c.claimNumber || "") + '">' +
+        '<h3>' + escapeHtml(c.label || "Untitled case") + ' <span class="badge level">L' + Math.max(1, currentLevel(c)) + "</span></h3>" +
+        '<div class="meta">' + escapeHtml(c.insurer || "Insurer not set") +
+          (c.claimNumber ? " · claim " + escapeHtml(c.claimNumber) : "") +
+          (c.denialDate ? " · denied " + escapeHtml(c.denialDate) : "") + "</div>" +
+        '<div class="meta">' + escapeHtml(c.denialReason || "Reason not set") + "</div>" +
+        "<div style=\"margin-top:0.5rem\">" + badge +
+          ' <span class="badge neutral">' + doneDocs + "/" + c.documents.length + " docs</span>" +
+          ' <span class="badge neutral">' + c.calls.length + " calls</span></div>" +
+      "</div>"
+    );
+  }).join("");
+}
+
+function currentLevel(c) {
+  for (let i = 0; i < c.levels.length; i++) {
+    if (!c.levels[i].outcomeDate) return i + 1;
+  }
+  return c.levels.length;
+}
+function nextDue(c) {
+  if (!c.denialDate) return null;
+  const pendingIndex = c.levels.findIndex((l) => !l.outcomeDate);
+  if (pendingIndex === -1) return null;
+  const resolutions = {};
+  c.levels.forEach((l, i) => { if (l.outcomeDate) resolutions[i + 1] = l.outcomeDate; });
+  const info = levelDueDate(c.denialDate, c.windowDays, pendingIndex + 1, resolutions);
+  if (!info) return null;
+  const days = daysLeft(info.due, todayStr());
+  return {
+    levelName: c.levels[pendingIndex] ? "L" + (pendingIndex + 1) : "Due",
+    dueISO: info.due,
+    days,
+    estimated: !!info.estimated
+  };
+}
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function daysBadge(days) {
+  const s = statusForDaysLeft(days);
+  if (s === "overdue") return '<span class="badge overdue">overdue ' + (-days) + "d</span>";
+  if (s === "due-soon") return '<span class="badge due-soon">' + (days === 0 ? "due today" : days + "d left") + "</span>";
+  return '<span class="badge on-track">' + days + "d left</span>";
+}
+
+function findClaim(id) {
+  return claims.find((c) => c.id === id) || null;
+}
+
+function openClaim(id) {
+  openClaimId = id;
+  const c = findClaim(id);
+  if (!c) return;
+  $("#dlg-title").textContent = c.label || "Untitled case";
+  $("#f-label").value = c.label;
+  $("#f-claimnum").value = c.claimNumber;
+  $("#f-insurer").value = c.insurer;
+  $("#f-denialdate").value = c.denialDate;
+  $("#f-reason").value = c.denialReason;
+  $("#f-reasonnotes").value = c.denialReasonNotes;
+  $("#f-window").value = c.windowDays;
+  renderLevels();
+  renderDocs();
+  renderCalls();
+  renderSummary();
+  $("#btn-delete").hidden = false;
+  document.getElementById("claim-dialog").showModal();
+}
+function closeDialog() {
+  document.getElementById("claim-dialog").close();
+  openClaimId = null;
+  renderList();
+}
+
+function renderLevels() {
+  const c = findClaim(openClaimId);
+  if (!c) return;
+  const resolutions = {};
+  c.levels.forEach((l, i) => { if (l.outcomeDate) resolutions[i + 1] = l.outcomeDate; });
+  const rows = c.levels.map((l, i) => {
+    const info = c.denialDate ? levelDueDate(c.denialDate, c.windowDays, i + 1, resolutions) : null;
+    let dueCell = '<td colspan="2"><input type="date" disabled></td>';
+    let badge = "";
+    if (info) {
+      const days = daysLeft(info.due, todayStr());
+      dueCell = '<td>' + escapeHtml(info.due) + (info.estimated ? " <span class=\"kanban-note\">(est.)</span>" : " (actual)") + '</td>';
+      if (!l.outcomeDate) {
+        badge = "<td>" + daysBadge(days) + "</td>";
+      } else {
+        badge = "<td><span class=\"badge neutral\">decided " + escapeHtml(l.outcomeDate) + "</span></td>";
+      }
+    }
+    return (
+      "<tr>" +
+        '<td style="font-weight:600;white-space:nowrap">L' + (i + 1) + "</td>" +
+        '<td><input type="text" data-level-name="' + i + '" value="' + escapeHtml(l.name) + '" maxlength="80" aria-label="Level ' + (i + 1) + ' name"></td>' +
+        '<td><input type="date" data-level-outcome="' + i + '" value="' + escapeHtml(l.outcomeDate || "") + '" aria-label="Level ' + (i + 1) + ' decision date"></td>' +
+        dueCell + badge +
+        '<td><button type="button" class="danger small" data-del-level="' + i + '" aria-label="Remove level ' + (i + 1) + '">✕</button></td>' +
+      "</tr>"
+    );
+  }).join("");
+  $("#levels-wrap").innerHTML =
+    '<table class="levels"><thead><tr><th></th><th>Level name</th><th>Decision date (actual)</th><th>Next letter due</th><th>Countdown</th><th></th></tr></thead><tbody>' +
+    rows + "</tbody></table>";
+  const cl = currentLevel(c);
+  const nd = nextDue(c);
+  let note = "Next letter to send: <strong>L" + cl + " — " + escapeHtml(c.levels[cl - 1] ? c.levels[cl - 1].name : "") + "</strong>";
+  if (nd) {
+    note += " · due <strong>" + escapeHtml(nd.dueISO) + "</strong> (" + (nd.days < 0 ? "overdue " + -nd.days + "d" : nd.days + "d left") + (nd.estimated ? ", estimated" : "") + ")";
+  } else {
+    note += " — enter a denial date to compute deadlines.";
+  }
+  note += "<br>Enter each level's actual decision date when it arrives — later due dates are then computed from that real date instead of estimated.";
+  $("#levels-note").innerHTML = note;
+  const w = $("#levels-wrap");
+  w.querySelectorAll("[data-level-name]").forEach((el) => {
+    el.addEventListener("input", onLevelName);
+  });
+  w.querySelectorAll("[data-level-outcome]").forEach((el) => {
+    el.addEventListener("change", onLevelOutcome);
+  });
+  w.querySelectorAll("[data-del-level]").forEach((el) => {
+    el.addEventListener("click", function () { delLevel(+this.getAttribute("data-del-level")); });
+  });
+}
+
+function renderSummary() {
+  const c = findClaim(openClaimId);
+  if (!c) return;
+  const nd = nextDue(c);
+  if (!c.denialDate) {
+    $("#summary-box").innerHTML = "Enter the denial date from your letter to see the appeal window countdown.";
+    return;
+  }
+  if (!nd) {
+    $("#summary-box").innerHTML = "All appeal levels have outcomes recorded. Add another level if your plan allows more appeals.";
+    return;
+  }
+  $("#summary-box").innerHTML =
+    "<div style=\"font-size:1.05rem\">" + daysBadge(nd.days) +
+    " &nbsp; L" + currentLevel(c) + " letter due <strong>" + escapeHtml(nd.dueISO) + "</strong>" +
+    (nd.estimated ? " <span class=\"kanban-note\">estimated — confirm with your plan</span>" : "") + "</div>" +
+    "<div class=\"kanban-note\">Window setting: " + c.windowDays + " days per level. Plans and states differ (internal, external review, provider appeals) — treat this as a planning aid, not a ruling.</div>";
+}
+
+function renderDocs() {
+  const c = findClaim(openClaimId);
+  if (!c) return;
+  $("#docs-wrap").innerHTML = c.documents.length
+    ? c.documents.map((d, i) =>
+        '<div class="row-item doc-item' + (d.done ? " done" : "") + '">' +
+          '<input type="checkbox" data-doc-check="' + i + '"' + (d.done ? " checked" : "") + ' aria-label="Mark document done">' +
+          '<span class="grow doc-text">' + escapeHtml(d.text) + "</span>" +
+          '<button type="button" class="danger small" data-doc-del="' + i + '" aria-label="Remove document">✕</button>' +
+        "</div>").join("")
+    : '<div class="kanban-note">Nothing yet. Common documents: denial letter, itemized bill, EOB, medical records the denial referenced, prior-authorization proof, appeal letter.</div>';
+  $("#docs-wrap").querySelectorAll("[data-doc-check]").forEach((el) => {
+    el.addEventListener("change", onDocCheck);
+  });
+  $("#docs-wrap").querySelectorAll("[data-doc-del]").forEach((el) => {
+    el.addEventListener("click", function () { delDoc(+this.getAttribute("data-doc-del")); });
+  });
+}
+
+function renderCalls() {
+  const c = findClaim(openClaimId);
+  if (!c) return;
+  const items = c.calls.slice().reverse().map((k) => {
+    const idx = c.calls.indexOf(k);
+    return (
+      '<div class="row-item call-item">' +
+        '<div class="grow"><div>' + escapeHtml(k.date || "no date") + " · " + escapeHtml(k.who || "unspecified") +
+        (k.ref ? ' · ref <span class="ref">' + escapeHtml(k.ref) + "</span>" : "") + "</div>" +
+        (k.notes ? '<div class="kanban-note">' + escapeHtml(k.notes) + "</div>" : "") + "</div>" +
+        '<button type="button" class="danger small" data-call-del="' + idx + '" aria-label="Remove call">✕</button>' +
+      "</div>"
+    );
+  }).join("");
+  $("#calls-wrap").innerHTML = items || '<div class="kanban-note">No calls logged. Log every call: date, who you called, the <strong>reference number</strong> they give you, and what was said. Reference numbers are your proof you called.</div>';
+  $("#calls-wrap").querySelectorAll("[data-call-del]").forEach((el) => {
+    el.addEventListener("click", function () { delCall(+this.getAttribute("data-call-del")); });
+  });
+}
+
+function persist() {
+  saveClaims(claims);
+  renderList();
+  renderLevels();
+  renderDocs();
+  renderCalls();
+  renderSummary();
+}
+
+$("#claims-list").addEventListener("click", function (e) {
+  const card = e.target.closest(".claim-card");
+  if (card) openClaim(card.getAttribute("data-id"));
+});
+$("#claims-list").addEventListener("keydown", function (e) {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const card = e.target.closest(".claim-card");
+  if (card) { e.preventDefault(); openClaim(card.getAttribute("data-id")); }
+});
+
+$("#f-label").addEventListener("input", function () { upd("label", this.value); $("#dlg-title").textContent = this.value || "Untitled case"; });
+$("#f-claimnum").addEventListener("input", function () { upd("claimNumber", this.value); });
+$("#f-insurer").addEventListener("input", function () { upd("insurer", this.value); });
+$("#f-denialdate").addEventListener("change", function () { upd("denialDate", this.value); });
+$("#f-reason").addEventListener("change", function () { upd("denialReason", this.value); });
+$("#f-reasonnotes").addEventListener("input", function () { upd("denialReasonNotes", this.value); });
+$("#f-window").addEventListener("input", function () { upd("windowDays", this.value); });
+
+function upd(field, value) {
+  const c = findClaim(openClaimId);
+  if (!c) return;
+  if (field === "denialDate") {
+    const p = parseLocalDate(value);
+    c[field] = p ? toISO(p) : "";
+  } else if (field === "windowDays") {
+    const n = Number(value);
+    c[field] = Number.isFinite(n) && n >= 1 && n <= 730 ? Math.round(n) : c[field];
+  } else {
+    c[field] = value.slice ? value.slice(0, 200) : value;
+  }
+  persist();
+}
+
+function onLevelName(e) {
+  const c = findClaim(openClaimId);
+  if (!c) return;
+  c.levels[+e.target.getAttribute("data-level-name")].name = e.target.value.slice(0, 80);
+  saveClaims(claims);
+}
+function onLevelOutcome(e) {
+  const c = findClaim(openClaimId);
+  if (!c) return;
+  const p = parseLocalDate(e.target.value);
+  c.levels[+e.target.getAttribute("data-level-outcome")].outcomeDate = p ? toISO(p) : "";
+  persist();
+}
+function delLevel(i) {
+  const c = findClaim(openClaimId);
+  if (!c) return;
+  if (c.levels.length <= 1) return;
+  c.levels.splice(i, 1);
+  persist();
+}
+$("#btn-add-level").addEventListener("click", function () {
+  const c = findClaim(openClaimId);
+  if (!c) return;
+  c.levels.push({ name: "Level " + (c.levels.length + 1) + " — added level", outcomeDate: "" });
+  persist();
+});
+
+function onDocCheck(e) {
+  const c = findClaim(openClaimId);
+  if (!c) return;
+  c.documents[+e.target.getAttribute("data-doc-check")].done = e.target.checked;
+  persist();
+}
+function delDoc(i) {
+  const c = findClaim(openClaimId);
+  if (!c) return;
+  c.documents.splice(i, 1);
+  persist();
+}
+$("#btn-add-doc").addEventListener("click", function () {
+  const c = findClaim(openClaimId);
+  const el = $("#f-newdoc");
+  if (!c || !el.value.trim()) return;
+  c.documents.push({ text: el.value.trim().slice(0, 120), done: false });
+  el.value = "";
+  persist();
+});
+$("#f-newdoc").addEventListener("keydown", function (e) {
+  if (e.key === "Enter") { e.preventDefault(); $("#btn-add-doc").click(); }
+});
+
+function delCall(i) {
+  const c = findClaim(openClaimId);
+  if (!c) return;
+  c.calls.splice(i, 1);
+  persist();
+}
+$("#btn-add-call").addEventListener("click", function () {
+  const c = findClaim(openClaimId);
+  if (!c) return;
+  const date = window.prompt("Call date (YYYY-MM-DD, blank for today):", todayStr());
+  if (date === null) return;
+  const who = window.prompt("Who did you call? (e.g. member services)", "") || "";
+  const ref = window.prompt("Reference number they gave you:", "") || "";
+  const notes = window.prompt("What was said? (next steps, names, promises)", "") || "";
+  const p = parseLocalDate(date.trim() || todayStr());
+  c.calls.push({ date: p ? toISO(p) : "", who: who.slice(0, 80), ref: ref.slice(0, 60), notes: notes.slice(0, 400) });
+  persist();
+});
+
+$("#btn-new").addEventListener("click", function () {
+  const c = normalizeClaim({});
+  c.label = "";
+  claims.push(c);
+  saveClaims(claims);
+  openClaim(c.id);
+});
+$("#btn-close").addEventListener("click", closeDialog);
+$("#btn-delete").addEventListener("click", function () {
+  const c = findClaim(openClaimId);
+  if (!c) return;
+  if (!window.confirm("Delete " + (c.label || "this case") + "? This removes it from the browser. Consider exporting a backup first.")) return;
+  claims = claims.filter((x) => x.id !== c.id);
+  closeDialog();
+});
+
+$("#search").addEventListener("input", function () {
+  searchQuery = this.value;
+  renderList();
+});
+
+$("#btn-export").addEventListener("click", function () {
+  const payload = {
+    app: "appeal-deadline-tracker",
+    version: 1,
+    exportedAt: todayStr(),
+    claims: claims
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "appeal-tracker-backup-" + todayStr() + ".json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
+});
+$("#btn-import").addEventListener("click", function () {
+  $("#import-file").click();
+});
+$("#import-file").addEventListener("change", function () {
+  const file = this.files && this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      const incoming = Array.isArray(data) ? data : data.claims;
+      if (!Array.isArray(incoming)) throw new Error("bad file");
+      const existing = new Set(claims.map((c) => c.id));
+      let added = 0;
+      incoming.forEach((raw) => {
+        const c = normalizeClaim(raw);
+        if (existing.has(c.id)) return;
+        claims.push(c);
+        added++;
+      });
+      saveClaims(claims);
+      renderList();
+      window.alert("Imported " + added + " claim(s). Existing claims were kept.");
+    } catch (err) {
+      window.alert("Could not read that file. Expected a backup exported from this app.");
+    }
+  };
+  reader.readAsText(file);
+  this.value = "";
+});
+
+document.getElementById("claim-dialog").addEventListener("cancel", function (e) {
+  openClaimId = null;
+  renderList();
+});
+
+const reasonSel = $("#f-reason");
+DENIAL_REASONS.forEach((r) => {
+  const opt = document.createElement("option");
+  opt.value = r;
+  opt.textContent = r;
+  reasonSel.appendChild(opt);
+});
+
+renderList();
+</script>
+</body>
+</html>

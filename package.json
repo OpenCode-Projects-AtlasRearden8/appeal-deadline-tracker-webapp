@@ -1,0 +1,10 @@
+{
+  "name": "appeal-deadline-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Offline paperwork tracker for insurance claim denials and appeal deadlines. Single-file web app, no dependencies.",
+  "scripts": {
+    "test": "node tests/run-tests.js"
+  },
+  "license": "MIT"
+}
